@@ -1,0 +1,1960 @@
+# Prompt สำหรับพัฒนา Application ทะเบียนครุภัณฑ์และแผนผังอุปกรณ์แบบ 2D/3D
+
+## คำสั่งหลักสำหรับ AI
+
+คุณคือ Senior Full-stack Developer, Software Architect, Database Designer และ 3D Web Developer
+
+ให้พัฒนา Web Application สำหรับจัดทำทะเบียนครุภัณฑ์คอมพิวเตอร์และอุปกรณ์เครือข่าย โดยผู้ใช้สามารถนำเข้าแผนผังของแต่ละอาคารและแต่ละชั้น เพิ่มอุปกรณ์ลงบนแผนผัง กำหนดตำแหน่งติดตั้ง ค้นหาอุปกรณ์ และแสดงผลได้ทั้งแบบ 2D และ 3D
+
+ระบบต้องรองรับการติดตั้งแบบ On-premise ภายในโรงพยาบาลหรือองค์กร โดยไม่บังคับให้เชื่อมต่อบริการ Cloud ภายนอก
+
+ให้พัฒนาระบบตาม Step ที่กำหนดด้านล่างทีละขั้น
+
+ข้อกำหนดสำคัญ:
+
+* ห้ามข้าม Step
+* หลังจบแต่ละ Step ให้ตรวจสอบ Build, Lint และ Test
+* ต้องแก้ไข Error ให้เสร็จก่อนดำเนินการ Step ถัดไป
+* ห้ามสร้างเพียง Mockup หรือ Pseudocode
+* ต้องสร้างไฟล์และโค้ดที่สามารถติดตั้งและรันได้จริง
+* เมื่อจบแต่ละ Step ให้รายงานไฟล์ที่สร้างหรือแก้ไข
+* ระบุสิ่งที่เสร็จแล้ว สิ่งที่ยังไม่เสร็จ และปัญหาที่พบอย่างตรงไปตรงมา
+* ใช้ภาษาไทยสำหรับข้อความใน User Interface
+* ใช้ภาษาอังกฤษสำหรับชื่อ Variable, Function, Class, API และ Database Field
+* ใช้ TypeScript แบบ Strict
+* หลีกเลี่ยงการใช้ `any`
+
+---
+
+# Step 0: วิเคราะห์และวางแผนระบบ
+
+ก่อนเริ่มเขียนโค้ด ให้ดำเนินการดังนี้
+
+1. สรุปความเข้าใจเกี่ยวกับระบบ
+2. ระบุกลุ่มผู้ใช้งาน
+3. ระบุ Use Case หลัก
+4. เสนอ Architecture
+5. เสนอ Technology Stack
+6. ออกแบบ Module หลัก
+7. ออกแบบ Data Flow
+8. อธิบายการเชื่อมโยงระหว่างมุมมอง 2D และ 3D
+9. อธิบายความเสี่ยงทางเทคนิค
+10. จัดทำ Development Roadmap
+
+Technology Stack ที่ต้องการ:
+
+### Frontend
+
+* Next.js รุ่นปัจจุบันแบบ App Router
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* React Hook Form
+* Zod
+* TanStack Query
+* Zustand
+* React Konva สำหรับ 2D Floor Plan Editor
+* Three.js
+* React Three Fiber
+* @react-three/drei
+* Lucide Icons
+
+### Backend
+
+* Next.js Route Handlers และ Server Actions หรือ NestJS
+* REST API
+* Prisma ORM
+* OpenAPI หรือ Swagger
+
+### Database
+
+* PostgreSQL
+
+### File Storage
+
+* Local Storage สำหรับ Development
+* MinIO หรือ S3-compatible Storage สำหรับ Production
+
+### Deployment
+
+* Docker
+* Docker Compose
+* Nginx
+* Environment Variables
+* รองรับ On-premise
+
+สิ่งที่ต้องส่งมอบใน Step นี้:
+
+* Architecture Overview
+* Module Diagram
+* Data Flow
+* Development Roadmap
+* รายการ Dependency
+* ข้อเสนอแนะด้าน Security และ Performance
+
+อย่าเริ่มเขียนโค้ดจนกว่าจะสรุป Step นี้เสร็จ
+
+---
+
+# Step 1: สร้าง Project Foundation
+
+สร้างโครงสร้าง Project ตาม Technology Stack ที่กำหนด
+
+ให้ดำเนินการดังนี้
+
+1. สร้าง Next.js Project แบบ App Router
+2. เปิดใช้งาน TypeScript Strict Mode
+3. ตั้งค่า Tailwind CSS
+4. ติดตั้ง shadcn/ui
+5. ตั้งค่า ESLint
+6. ตั้งค่า Prettier
+7. ตั้งค่า Environment Variables
+8. สร้าง Layout หลัก
+9. สร้าง Sidebar
+10. สร้าง Top Navigation
+11. รองรับ Responsive Layout
+12. ตั้งค่า Theme
+13. ตั้งค่า Timezone เป็น Asia/Bangkok
+14. สร้าง Error Boundary
+15. สร้าง Loading State
+16. สร้าง Not Found Page
+
+เมนูหลัก:
+
+* Dashboard
+* แผนผังอุปกรณ์
+* อาคารและชั้น
+* ทะเบียนครุภัณฑ์
+* อุปกรณ์เครือข่าย
+* การย้ายอุปกรณ์
+* การซ่อมบำรุง
+* รายงาน
+* ผู้ใช้งานและสิทธิ์
+* Audit Log
+* ตั้งค่าระบบ
+
+สร้างโครงสร้าง Folder ที่ชัดเจน เช่น
+
+```text
+src/
+├── app/
+├── components/
+├── features/
+├── lib/
+├── hooks/
+├── stores/
+├── services/
+├── types/
+├── schemas/
+└── config/
+```
+
+สิ่งที่ต้องส่งมอบ:
+
+* Project ที่รันได้
+* Layout หลัก
+* Navigation
+* Responsive UI
+* `.env.example`
+* README ขั้นต้น
+
+ตรวจสอบด้วยคำสั่ง:
+
+```bash
+npm run lint
+npm run build
+```
+
+หยุดและรายงานผลก่อนดำเนินการ Step ถัดไป
+
+---
+
+# Step 2: ตั้งค่า Database และ Prisma
+
+ติดตั้งและตั้งค่า PostgreSQL และ Prisma ORM
+
+สร้าง Entity อย่างน้อยดังนี้
+
+* User
+* Role
+* Permission
+* UserRole
+* RolePermission
+* Building
+* Floor
+* FloorPlan
+* Room
+* Department
+* DeviceType
+* Device
+* DevicePosition
+* NetworkInterface
+* NetworkSwitch
+* SwitchPort
+* LanOutlet
+* AssetMovement
+* MaintenanceRecord
+* Attachment
+* AuditLog
+* SystemSetting
+* ViewPreset
+
+ข้อกำหนดฐานข้อมูล:
+
+* ใช้ UUID เป็น Primary Key
+* มี `createdAt`
+* มี `updatedAt`
+* ตารางสำคัญมี `createdBy`
+* ตารางสำคัญมี `updatedBy`
+* รองรับ Soft Delete
+* กำหนด Unique Constraint สำหรับ Asset Code
+* รองรับ Floor Plan Version
+* มี Active Floor Plan ได้หนึ่งรายการต่อชั้น
+* Device Position ต้องเชื่อมกับ Floor Plan
+* เก็บประวัติตำแหน่งเดิม
+* ไม่เขียนทับประวัติการย้าย
+* ใช้ Transaction ในการย้ายอุปกรณ์
+
+ข้อมูล Building:
+
+* id
+* code
+* name
+* shortName
+* description
+* imageUrl
+* locationDescription
+* isActive
+* createdAt
+* updatedAt
+
+ข้อมูล Floor:
+
+* id
+* buildingId
+* floorNumber
+* name
+* description
+* displayOrder
+* floorWidth
+* floorDepth
+* floorHeight
+* floorThickness
+* floorElevation
+* rotationX
+* rotationY
+* rotationZ
+* isActive
+
+ข้อมูล FloorPlan:
+
+* id
+* buildingId
+* floorId
+* name
+* version
+* fileUrl
+* mimeType
+* originalWidth
+* originalHeight
+* textureOffsetX
+* textureOffsetY
+* textureScaleX
+* textureScaleY
+* textureRotation
+* textureOpacity
+* isActive
+* uploadedBy
+* uploadedAt
+
+ข้อมูล DevicePosition:
+
+* id
+* deviceId
+* floorPlanId
+* positionX
+* positionY
+* positionZ
+* rotationX
+* rotationY
+* rotationZ
+* markerScale
+* placementType
+* elevationFromFloor
+* wallSide
+* wallOffset
+* effectiveFrom
+* effectiveTo
+* isCurrent
+
+สร้าง:
+
+* Prisma Schema
+* Migration
+* Seed Script
+* Database Client
+* Transaction Helper
+
+Seed Data:
+
+* อาคารผู้ป่วยนอก
+* อาคารผู้ป่วยใน
+* อาคารอำนวยการ
+* ชั้นตัวอย่างอย่างน้อย 5 ชั้น
+* Device Type อย่างน้อย 15 ประเภท
+* User และ Role ตัวอย่าง
+
+ตรวจสอบ:
+
+```bash
+npx prisma validate
+npx prisma migrate dev
+npx prisma db seed
+npm run build
+```
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 3: Authentication และ Role-based Access Control
+
+พัฒนาระบบ Login และสิทธิ์ผู้ใช้งาน
+
+กำหนด Role อย่างน้อยดังนี้
+
+### System Administrator
+
+* จัดการผู้ใช้งาน
+* จัดการ Role และ Permission
+* จัดการอาคารและชั้น
+* ตั้งค่าระบบ
+* ดู Audit Log
+* Export ข้อมูล
+
+### IT Asset Officer
+
+* เพิ่มและแก้ไขครุภัณฑ์
+* Upload แผนผัง
+* เพิ่มและย้าย Marker
+* จัดการข้อมูลเครือข่าย
+* บันทึกการซ่อม
+* Export รายงาน
+
+### Viewer
+
+* ดูแผนผัง
+* ค้นหาอุปกรณ์
+* ดูรายละเอียด
+* ไม่สามารถแก้ไขข้อมูล
+
+ให้พัฒนา:
+
+1. Login Page
+2. Logout
+3. Secure Session
+4. Password Hash ด้วย Argon2 หรือ bcrypt
+5. Route Protection
+6. API Authorization
+7. Permission Guard
+8. Session Expiration
+9. Login Rate Limiting
+10. Audit Log สำหรับ Login และ Logout
+
+ข้อกำหนด:
+
+* ตรวจสอบสิทธิ์ทั้ง Frontend และ Backend
+* ห้ามพึ่งพาการซ่อนปุ่มเพียงอย่างเดียว
+* ผู้ไม่มีสิทธิ์ต้องได้รับ HTTP 403
+* ซ่อนข้อมูล IP, MAC, VLAN และ Network Topology ตามสิทธิ์
+
+สร้าง Test สำหรับ:
+
+* Login สำเร็จ
+* Password ผิด
+* ไม่มีสิทธิ์เข้าหน้า Admin
+* Viewer ไม่สามารถเพิ่ม Device
+* Session หมดอายุ
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 4: จัดการอาคารและชั้น
+
+สร้าง Module สำหรับจัดการ Building และ Floor
+
+ฟังก์ชัน Building:
+
+* แสดงรายการ
+* ค้นหา
+* เพิ่ม
+* ดูรายละเอียด
+* แก้ไข
+* ปิดใช้งาน
+* Soft Delete
+
+ฟังก์ชัน Floor:
+
+* แสดงรายการชั้นของอาคาร
+* เพิ่มชั้น
+* แก้ไขชั้น
+* กำหนดลำดับ
+* กำหนดขนาดสำหรับ 3D
+* กำหนด Elevation
+* กำหนด Rotation
+* ปิดใช้งาน
+
+สร้าง API:
+
+```text
+GET    /api/buildings
+POST   /api/buildings
+GET    /api/buildings/:id
+PATCH  /api/buildings/:id
+DELETE /api/buildings/:id
+
+GET    /api/buildings/:buildingId/floors
+POST   /api/buildings/:buildingId/floors
+GET    /api/floors/:id
+PATCH  /api/floors/:id
+DELETE /api/floors/:id
+```
+
+ใช้:
+
+* Pagination
+* Search
+* Sorting
+* Filtering
+* Zod Validation
+* Permission Check
+* Audit Log
+
+สร้าง UI:
+
+* Building Table
+* Building Form
+* Building Detail
+* Floor List
+* Floor Form
+* Floor 3D Settings Form
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 5: จัดการแผนผังแต่ละชั้น
+
+สร้าง Floor Plan Management Module
+
+รองรับไฟล์:
+
+* PNG
+* JPG
+* JPEG
+* WebP
+* SVG
+* PDF
+
+กรณี PDF:
+
+* แสดงรายการหน้า
+* ให้ผู้ใช้เลือกหน้าที่ต้องการ
+* แปลงหน้าที่เลือกเป็นรูปภาพ
+* บันทึกภาพที่สร้างเป็น Floor Plan
+
+ข้อมูลที่ต้องจัดเก็บ:
+
+* Floor Plan Name
+* Version
+* File URL
+* MIME Type
+* Width
+* Height
+* Scale
+* Rotation
+* Texture Offset
+* Texture Scale
+* Texture Opacity
+* Active Status
+* Uploaded By
+* Uploaded At
+
+ฟังก์ชัน:
+
+1. Upload แผนผัง
+2. Preview
+3. ตรวจสอบประเภทไฟล์
+4. ตรวจสอบขนาดไฟล์
+5. สร้าง Version
+6. Activate Version
+7. Archive Version
+8. Delete แบบ Soft Delete
+9. แสดงประวัติ Version
+10. กำหนด Active Version ได้เพียงหนึ่งรายการต่อชั้น
+
+สร้าง API:
+
+```text
+POST   /api/floors/:floorId/plans
+GET    /api/floors/:floorId/plans
+GET    /api/floor-plans/:id
+PATCH  /api/floor-plans/:id
+PATCH  /api/floor-plans/:id/activate
+DELETE /api/floor-plans/:id
+```
+
+Security:
+
+* เปลี่ยนชื่อไฟล์ก่อนจัดเก็บ
+* ห้ามใช้ชื่อไฟล์จากผู้ใช้เป็น Storage Path โดยตรง
+* จำกัด MIME Type
+* จำกัดขนาดไฟล์
+* ป้องกัน Path Traversal
+* บันทึก Audit Log
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 6: สร้างทะเบียนครุภัณฑ์
+
+สร้าง Device Management Module
+
+ข้อมูลอุปกรณ์:
+
+* Asset Code
+* Government Asset Code
+* Device Name
+* Device Type
+* Device Subtype
+* Brand
+* Model
+* Serial Number
+* Description
+* Image
+* Building
+* Floor
+* Room
+* Department
+* Status
+* Responsible Person
+* Owner Department
+* Purchase Date
+* Purchase Price
+* Vendor
+* Contract Number
+* Warranty Start Date
+* Warranty End Date
+* Expected Lifetime
+* Install Date
+* Last Inspection Date
+* Next Inspection Date
+* Note
+
+ประเภทอุปกรณ์อย่างน้อย:
+
+* Desktop Computer
+* Notebook
+* All-in-One
+* Thin Client
+* Server
+* Printer
+* Label Printer
+* Scanner
+* Barcode Scanner
+* UPS
+* Monitor
+* Projector
+* Access Point
+* Network Switch
+* Hub
+* Router
+* Firewall
+* Network Rack
+* Patch Panel
+* LAN Outlet
+* Fiber Outlet
+* CCTV Camera
+* NVR
+* IoT Device
+* Other
+
+สร้าง:
+
+* Device List
+* Device Form
+* Device Detail
+* Search
+* Filter
+* Pagination
+* Sort
+* Import CSV
+* Export CSV
+* Export Excel
+* QR Code
+
+Validation:
+
+* Asset Code ห้ามว่าง
+* Asset Code ห้ามซ้ำ
+* ตรวจสอบ Serial Number ซ้ำ
+* ตรวจสอบ IP Address
+* ตรวจสอบ MAC Address
+* ตรวจสอบ Warranty Date
+* ป้องกัน Duplicate Submit
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 7: สร้าง 2D Floor Plan Editor
+
+พัฒนา Floor Plan Editor ด้วย React Konva
+
+หน้าจอประกอบด้วย:
+
+### Toolbar
+
+* Select Building
+* Select Floor
+* Select Floor Plan
+* Zoom In
+* Zoom Out
+* Fit to Screen
+* Reset View
+* Pan
+* Select
+* Add Device
+* Move Device
+* Delete Marker
+* Undo
+* Redo
+* Show Grid
+* Snap to Grid
+* Show Label
+* Search Device
+* Filter Device Type
+* Filter Status
+
+### Canvas
+
+* แสดง Floor Plan เป็น Background
+* Zoom
+* Pan
+* รองรับ Mouse
+* รองรับ Touch
+* Add Marker
+* Select Marker
+* Drag Marker
+* Delete Marker
+* Hover Tooltip
+* Click เพื่อเปิด Property Panel
+
+### Layout
+
+* ด้านบน: Toolbar
+* ด้านซ้าย: Device Type และ Layer
+* ตรงกลาง: Canvas
+* ด้านขวา: Property Panel
+* ด้านล่าง: Status Bar
+
+Status Bar แสดง:
+
+* Zoom Level
+* Mouse Coordinate
+* Normalized Coordinate
+* จำนวน Marker
+* สถานะการบันทึก
+* Unsaved Changes
+
+---
+
+# Step 8: เพิ่มอุปกรณ์บนแผนผัง 2D
+
+พัฒนา Workflow การเพิ่มอุปกรณ์ดังนี้
+
+1. ผู้ใช้เลือกอาคาร
+2. ผู้ใช้เลือกชั้น
+3. ระบบโหลด Active Floor Plan
+4. ผู้ใช้เลือกประเภทอุปกรณ์
+5. ผู้ใช้กด Add Device
+6. Cursor เปลี่ยนเป็น Crosshair
+7. ผู้ใช้คลิกตำแหน่งบนแผนผัง
+8. ระบบแสดง Temporary Marker
+9. ระบบเปิด Property Panel
+10. ผู้ใช้กรอกข้อมูล
+11. ผู้ใช้กด Save
+12. ระบบตรวจสอบ Validation
+13. ระบบบันทึก Device
+14. ระบบบันทึก Device Position
+15. ระบบเปลี่ยน Temporary Marker เป็น Saved Marker
+16. ระบบบันทึก Audit Log
+
+หากผู้ใช้กด Cancel:
+
+* ลบ Temporary Marker
+* ไม่สร้าง Device
+* ไม่สร้าง Device Position
+
+---
+
+# Step 9: การจัดเก็บพิกัดแบบ Normalized Coordinates
+
+ห้ามจัดเก็บตำแหน่งเป็น Pixel แบบตายตัว
+
+ใช้:
+
+```typescript
+positionX = pointerX / displayedImageWidth;
+positionY = pointerY / displayedImageHeight;
+```
+
+ค่าต้องอยู่ระหว่าง 0 ถึง 1
+
+เมื่อนำมาแสดง:
+
+```typescript
+displayX = positionX * currentImageWidth;
+displayY = positionY * currentImageHeight;
+```
+
+สร้าง Utility Function:
+
+```typescript
+canvasToNormalizedPosition()
+normalizedToCanvasPosition()
+normalizedToWorldPosition()
+worldToNormalizedPosition()
+```
+
+ข้อกำหนด:
+
+* Resize แล้วตำแหน่ง Marker ต้องไม่เปลี่ยน
+* Zoom แล้วตำแหน่ง Marker ต้องไม่เปลี่ยน
+* Pan แล้วข้อมูลตำแหน่งต้องไม่เปลี่ยน
+* Refresh แล้ว Marker ต้องอยู่จุดเดิม
+* เปลี่ยน Monitor Resolution แล้ว Marker ต้องตรงตำแหน่งเดิม
+
+สร้าง Unit Test ครอบคลุม:
+
+* มุมซ้ายบน
+* จุดกึ่งกลาง
+* มุมขวาล่าง
+* ค่า Boundary
+* การแปลงไปและกลับ
+* Floating Point Tolerance
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 10: การย้ายอุปกรณ์และประวัติตำแหน่ง
+
+ให้ผู้ใช้ลาก Marker เพื่อย้ายตำแหน่งได้
+
+เมื่อย้าย:
+
+1. แสดงตำแหน่งใหม่แบบ Preview
+2. ผู้ใช้กด Save หรือ Confirm
+3. ระบบสร้าง DevicePosition รายการใหม่
+4. กำหนดตำแหน่งเดิมเป็น `isCurrent = false`
+5. บันทึก `effectiveTo`
+6. กำหนดตำแหน่งใหม่เป็น `isCurrent = true`
+7. สร้าง AssetMovement
+8. บันทึก Audit Log
+
+รองรับ:
+
+* ย้ายภายในห้อง
+* ย้ายห้อง
+* ย้ายชั้น
+* ย้ายอาคาร
+* ถอดออกจากแผนผัง
+* ส่งซ่อม
+* ยกเลิกใช้งาน
+* จำหน่าย
+
+ใช้ Database Transaction
+
+สร้าง Movement History Page
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 11: ค้นหาและ Focus อุปกรณ์บนแผนผัง
+
+ผู้ใช้ต้องค้นหาได้จาก:
+
+* Asset Code
+* Serial Number
+* Device Name
+* IP Address
+* MAC Address
+* Hostname
+* อาคาร
+* ชั้น
+* ห้อง
+* หน่วยงาน
+* ประเภท
+* สถานะ
+* ผู้รับผิดชอบ
+
+เมื่อเลือกผลการค้นหา:
+
+1. เปลี่ยนอาคาร
+2. เปลี่ยนชั้น
+3. โหลด Floor Plan
+4. Zoom ไปยัง Marker
+5. Highlight Marker
+6. เปิด Property Panel
+
+เพิ่ม:
+
+* Search Suggestion
+* Recent Search
+* Clear Search
+* Keyboard Navigation
+* Empty Result
+* Loading State
+* Error State
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 12: ข้อมูลอุปกรณ์เครือข่าย
+
+เพิ่ม Network Module
+
+ข้อมูล:
+
+* Hostname
+* IP Address
+* Secondary IP
+* MAC Address
+* VLAN ID
+* Subnet
+* Gateway
+* DNS
+* Connection Type
+* DHCP หรือ Static
+* Switch
+* Switch Port
+* Patch Panel
+* Patch Panel Port
+* LAN Outlet
+* Wi-Fi SSID
+* Network Zone
+
+สร้างความสัมพันธ์:
+
+```text
+Device
+→ LAN Outlet
+→ Patch Panel Port
+→ Patch Panel
+→ Switch Port
+→ Network Switch
+```
+
+ตรวจสอบ:
+
+* IP ซ้ำ
+* MAC ซ้ำ
+* Switch Port ซ้ำ
+* LAN Outlet ถูกใช้งานซ้ำ
+* VLAN ไม่ถูกต้อง
+
+ซ่อนข้อมูลเครือข่ายตาม Permission
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 13: สร้าง 3D Single Floor Viewer
+
+พัฒนาโหมด 3D สำหรับแสดงชั้นที่เลือก
+
+ใช้:
+
+* Three.js
+* React Three Fiber
+* @react-three/drei
+* OrbitControls
+* TextureLoader
+* Raycaster
+
+ให้มี View Mode:
+
+```typescript
+type ViewMode =
+  | "2d-editor"
+  | "3d-floor"
+  | "3d-building";
+```
+
+ใน 3D Floor View:
+
+1. โหลด Active Floor Plan
+2. โหลดภาพเป็น Texture
+3. สร้าง Plane หรือ Floor Slab
+4. รักษาสัดส่วนภาพ
+5. สร้าง Marker จากข้อมูล Device Position
+6. วาง Marker ตาม Normalized Coordinates
+7. รองรับ Click
+8. รองรับ Hover
+9. รองรับ Tooltip
+10. รองรับ Property Panel
+
+Controls:
+
+* Rotate
+* Zoom
+* Pan
+* Reset Camera
+* Fit to Screen
+* Top View
+* Perspective View
+* Front View
+* Back View
+* Left View
+* Right View
+* Isometric View
+* Show Grid
+* Show Axis
+* Show Label
+* Show Marker
+* Toggle Shadow
+* Toggle Transparency
+* Auto Rotate
+
+Auto Rotate ต้องปิดเป็นค่าเริ่มต้น
+
+---
+
+# Step 14: สร้าง Floor Plane แบบ 3D
+
+สร้างพื้นผิวแผนผังโดยใช้ข้อมูล:
+
+* Original Width
+* Original Height
+* Floor Width
+* Floor Depth
+* Floor Thickness
+* Floor Elevation
+* Floor Rotation X
+* Floor Rotation Y
+* Floor Rotation Z
+* Texture Offset
+* Texture Scale
+* Texture Rotation
+* Texture Opacity
+
+คำนวณสัดส่วน:
+
+```typescript
+const aspectRatio = originalWidth / originalHeight;
+const floorWidth = configuredFloorWidth;
+const floorDepth = floorWidth / aspectRatio;
+```
+
+ใช้ PlaneGeometry หรือ BoxGeometry
+
+ภาพ Floor Plan ต้องแสดงบนพื้นผิวด้านบน
+
+ข้อกำหนด:
+
+* ห้ามยืดภาพผิดสัดส่วน
+* รองรับ Alpha Channel
+* รองรับ Texture Rotation
+* รองรับ Texture Offset
+* รองรับ Texture Scale
+* รองรับ Opacity
+* Dispose Texture เมื่อเปลี่ยนชั้น
+* แสดง Error เมื่อโหลดภาพไม่สำเร็จ
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 15: แปลงตำแหน่ง 2D เป็น 3D
+
+ใช้ Normalized Coordinates ชุดเดียวกันทั้ง 2D และ 3D
+
+สูตร:
+
+```typescript
+const worldX = (positionX - 0.5) * floorWidth;
+const worldZ = (0.5 - positionY) * floorDepth;
+const worldY =
+  floorElevation +
+  floorThickness / 2 +
+  markerHeight;
+```
+
+ข้อกำหนด:
+
+* Marker ใน 2D และ 3D ต้องตรงตำแหน่งกัน
+* Marker ต้องเป็น Child ของ Floor Group
+* เมื่อหมุน Floor Marker ต้องหมุนตาม
+* เมื่อเปลี่ยน Texture Scale ต้องตรวจสอบตำแหน่ง
+* เมื่อ Resize หน้าจอ Marker ต้องไม่คลาดเคลื่อน
+
+สร้าง Test:
+
+* 2D Center ตรงกับ 3D Center
+* Top Left
+* Top Right
+* Bottom Left
+* Bottom Right
+* แปลง World กลับเป็น Normalized
+* Floor Rotation
+* Floor Scale
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 16: สร้าง Marker แบบ 3D
+
+Marker รองรับ:
+
+* Billboard Sprite
+* 3D Icon
+* HTML Label
+* Colored Pin
+* Status Badge
+* Selection Ring
+* Simple 3D Model
+
+Marker ต้อง:
+
+* รองรับ Raycasting
+* รองรับ Hover
+* รองรับ Click
+* รองรับ Focus
+* รองรับ Highlight
+* แสดง Asset Code
+* เปิดหรือปิด Label ได้
+* ไม่จมลงในพื้น
+* ไม่ลอยสูงเกินไป
+* ปรับ Scale ตาม Zoom ได้
+* แสดงประเภทอุปกรณ์
+* แสดงสถานะโดยไม่ใช้สีเพียงอย่างเดียว
+
+ประเภทตัวอย่าง:
+
+* Computer
+* Printer
+* Scanner
+* Access Point
+* Switch
+* LAN Outlet
+* CCTV
+* UPS
+* Network Rack
+
+สถานะ:
+
+* Normal
+* Warning
+* Maintenance
+* Repair
+* Inactive
+* Disposed
+
+เมื่อคลิก Marker:
+
+* เลือก Device
+* Highlight Marker
+* เปิด Property Panel
+* แสดงรายละเอียดตาม Permission
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 17: การหมุนภาพแผนผังและมุมกล้อง
+
+แยกการหมุนเป็นสองประเภท
+
+## Camera Rotation
+
+ใช้ OrbitControls
+
+* Drag ซ้าย: Rotate
+* Drag ขวา: Pan
+* Mouse Wheel: Zoom
+* รองรับ Touch
+* มี Min Distance
+* มี Max Distance
+* ป้องกันกล้องทะลุ Floor
+* Reset Camera ได้
+
+Camera Rotation ไม่ต้องบันทึกฐานข้อมูล เว้นแต่ผู้ใช้บันทึก View Preset
+
+## Floor Rotation
+
+หมุน Object ของชั้นโดยตรง
+
+รองรับ:
+
+* Rotation X
+* Rotation Y
+* Rotation Z
+* Slider
+* Numeric Input
+* Reset Rotation
+* Save Rotation
+* Auto Rotate Preview
+
+Floor Rotation ที่ผู้ใช้บันทึกต้องจัดเก็บใน Database
+
+เมื่อ Floor หมุน:
+
+* Texture ต้องหมุนตาม
+* Marker ต้องหมุนตาม
+* Label ต้องอยู่กับ Marker
+* พิกัด Normalized ต้องไม่เปลี่ยน
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 18: Camera Presets
+
+สร้าง Camera Preset:
+
+* Top View
+* Perspective View
+* Front View
+* Back View
+* Left View
+* Right View
+* Isometric View
+* Focus Selected Floor
+* Focus Selected Device
+* Reset View
+
+เพิ่ม Animation แบบนุ่มนวลเมื่อเปลี่ยน Camera
+
+รองรับ `prefers-reduced-motion`
+
+สร้าง ViewPreset ใน Database:
+
+* Name
+* User ID
+* Building ID
+* Floor ID
+* Camera Position
+* Camera Target
+* Camera Rotation
+* Camera Zoom
+* Projection Type
+* Visible Layers
+* Exploded Distance
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 19: สร้าง 3D Building Viewer
+
+แสดงทุกชั้นของอาคารซ้อนกันในฉากเดียว
+
+แต่ละชั้นต้อง:
+
+* ใช้ Floor Plan ของชั้นนั้นเป็น Texture
+* มี Floor Elevation
+* มี Floor Height
+* มี Floor Thickness
+* มี Device Marker ของชั้นนั้น
+* คลิกเลือกชั้นได้
+* ซ่อนหรือแสดงได้
+
+คำนวณระดับชั้น:
+
+```typescript
+const floorY =
+  buildingBaseElevation +
+  floorOrder * floorHeight;
+```
+
+ความสามารถ:
+
+* Rotate Building
+* Zoom
+* Pan
+* Select Floor
+* Focus Floor
+* Hide Floor
+* Show Floor
+* Fade Unselected Floor
+* Wireframe Unselected Floor
+* Show All Markers
+* Show Selected Floor Markers
+* Filter Device Type
+* Filter Status
+* Double Click เพื่อเปิด 3D Single Floor View
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 20: Exploded Floor View
+
+สร้าง Exploded View
+
+ผู้ใช้สามารถ:
+
+* กด Explode
+* กด Collapse
+* ปรับระยะห่างระหว่างชั้น
+* หมุนอาคารขณะ Exploded
+* เลือกชั้น
+* เลือก Marker
+* ซ่อน Marker
+
+สร้าง Slider:
+
+* 0 เมตร
+* 2 เมตร
+* 5 เมตร
+* 10 เมตร
+
+ใช้ Animation แบบนุ่มนวล
+
+ตัวอย่าง:
+
+```typescript
+const displayedY =
+  baseFloorY +
+  floorOrder * explodedDistance;
+```
+
+ข้อกำหนด:
+
+* Floor Plan Texture ต้องอยู่กับชั้น
+* Marker ต้องเคลื่อนตามชั้น
+* Selection ต้องไม่หาย
+* Animation ต้องหยุดได้
+* รองรับ Reduced Motion
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 21: Floor Isolation Mode
+
+สร้าง Isolation Mode
+
+ตัวเลือก:
+
+* Hide Other Floors
+* Fade Other Floors
+* Wireframe Other Floors
+
+เมื่อเปิด Isolation Mode:
+
+* Focus ไปยังชั้นที่เลือก
+* แสดงชั้นที่เลือกแบบทึบ
+* แสดง Marker เฉพาะชั้นที่เลือก
+* เปิด Floor Property Panel
+* แสดงปุ่ม Back to Building View
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 22: เพิ่มอุปกรณ์จากโหมด 3D
+
+พัฒนา Placement Mode ใน 3D Single Floor View
+
+Workflow:
+
+1. ผู้ใช้เลือก Device Type
+2. กด Add Device
+3. Cursor เปลี่ยนเป็น Placement Mode
+4. ผู้ใช้คลิก Floor Mesh
+5. ใช้ Raycaster หาจุดตัด
+6. แปลง World Position เป็น Local Position
+7. แปลง Local Position เป็น Normalized Coordinates
+8. ตรวจสอบค่า 0 ถึง 1
+9. แสดง Temporary Marker
+10. เปิด Property Panel
+11. ผู้ใช้กรอกข้อมูล
+12. บันทึก Device
+13. บันทึก Device Position
+14. อัปเดตทั้ง 2D และ 3D
+15. บันทึก Audit Log
+
+ตัวอย่าง:
+
+```typescript
+raycaster.setFromCamera(pointer, camera);
+
+const intersections =
+  raycaster.intersectObject(floorMesh);
+
+if (intersections.length > 0) {
+  const localPoint = floorMesh.worldToLocal(
+    intersections[0].point.clone()
+  );
+
+  const positionX =
+    localPoint.x / floorWidth + 0.5;
+
+  const positionY =
+    0.5 - localPoint.z / floorDepth;
+}
+```
+
+หากคลิกนอก Floor Mesh ห้ามสร้าง Marker
+
+หากกด Cancel ให้ลบ Temporary Marker
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 23: Placement Type แบบ 3D
+
+รองรับ:
+
+* Floor
+* Desk
+* Wall
+* Ceiling
+* Rack
+* Pole
+* Outdoor
+* Virtual
+
+ข้อมูลเพิ่มเติม:
+
+* elevationFromFloor
+* wallSide
+* wallOffset
+* ceilingHeight
+* rackId
+* rackUnitStart
+* rackUnitEnd
+* orientation
+* placementNote
+
+พฤติกรรม:
+
+### Floor หรือ Desk
+
+วาง Marker เหนือ Floor
+
+### Ceiling
+
+วาง Marker ตาม Ceiling Height
+
+### Wall
+
+กำหนด Wall Side และ Height
+
+### Rack
+
+เชื่อมกับ Network Rack และ Rack Unit
+
+### Virtual
+
+แสดงใน Logical Layer หรือไม่แสดง Marker ทางกายภาพ
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 24: State Management ระหว่าง 2D และ 3D
+
+สร้าง Zustand Store กลาง
+
+```typescript
+interface AssetMapState {
+  buildingId: string | null;
+  floorId: string | null;
+  floorPlanId: string | null;
+
+  viewMode:
+    | "2d-editor"
+    | "3d-floor"
+    | "3d-building";
+
+  selectedDeviceId: string | null;
+  selectedFloorId: string | null;
+
+  deviceTypeFilters: string[];
+  statusFilters: string[];
+
+  showMarkers: boolean;
+  showLabels: boolean;
+  showGrid: boolean;
+  showAxis: boolean;
+
+  explodedDistance: number;
+  isolationMode: boolean;
+  cameraPreset: string;
+}
+```
+
+ข้อกำหนด:
+
+* เลือก Device ใน 2D แล้วเปิด 3D ต้องยังเลือก Device เดิม
+* เลือก Device ใน 3D แล้วเปิด 2D ต้อง Highlight Device เดิม
+* Filter ต้องคงอยู่เมื่อเปลี่ยน View
+* Building และ Floor ต้องคงอยู่
+* Search Result ต้องคงอยู่
+* Refresh Page ให้ Restore State ที่เหมาะสมจาก URL Query Parameter
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 25: Dashboard และรายงาน
+
+สร้าง Dashboard แสดง:
+
+* จำนวนอาคาร
+* จำนวนชั้น
+* จำนวนอุปกรณ์
+* จำนวนอุปกรณ์ตามประเภท
+* จำนวนอุปกรณ์ตามสถานะ
+* ใกล้หมดประกัน
+* หมดประกัน
+* ถึงกำหนดบำรุงรักษา
+* ส่งซ่อม
+* ไม่มีตำแหน่ง
+* กิจกรรมล่าสุด
+* การย้ายล่าสุด
+
+รายงาน:
+
+* ทะเบียนครุภัณฑ์ทั้งหมด
+* แยกตามอาคาร
+* แยกตามชั้น
+* แยกตามห้อง
+* แยกตามหน่วยงาน
+* แยกตามประเภท
+* แยกตามสถานะ
+* ใกล้หมดประกัน
+* หมดประกัน
+* ถึงกำหนดตรวจสอบ
+* ส่งซ่อม
+* ไม่มีตำแหน่ง
+* IP ซ้ำ
+* MAC ซ้ำ
+* Asset Code ซ้ำ
+* Movement History
+* Audit Log
+
+Export:
+
+* CSV
+* Excel
+* PDF
+* JSON
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 26: QR Code
+
+สร้าง QR Code สำหรับ Device ทุกตัว
+
+เมื่อ Scan ให้เปิด Device Detail Page
+
+แสดง:
+
+* Asset Code
+* Device Name
+* Type
+* Status
+* Building
+* Floor
+* Room
+* Department
+* Responsible Person
+* Warranty End
+* Maintenance ล่าสุด
+
+Security:
+
+* ผู้ใช้ทั่วไปไม่เห็น IP
+* ผู้ใช้ทั่วไปไม่เห็น MAC
+* ผู้ใช้ทั่วไปไม่เห็น VLAN
+* ผู้ใช้ทั่วไปไม่เห็น Network Topology
+* ข้อมูลที่แสดงต้องขึ้นกับ Permission
+
+รองรับการพิมพ์ QR Label
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 27: Maintenance Module
+
+สร้างระบบซ่อมและบำรุงรักษา
+
+ข้อมูล:
+
+* Device
+* Maintenance Type
+* Problem
+* Reported Date
+* Reporter
+* Assignee
+* Start Date
+* Completed Date
+* Cost
+* Vendor
+* Resolution
+* Parts Used
+* Status
+* Attachment
+* Next Maintenance Date
+
+สร้าง:
+
+* Maintenance List
+* Maintenance Form
+* Maintenance Detail
+* Device Maintenance History
+* Due Maintenance Alert
+* Warranty Alert
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 28: Audit Log
+
+บันทึก:
+
+* User
+* Action
+* Entity Type
+* Entity ID
+* Previous Value
+* New Value
+* IP Address
+* User Agent
+* Date Time
+* Result
+* Reason
+
+Action ตัวอย่าง:
+
+* LOGIN
+* LOGOUT
+* CREATE_DEVICE
+* UPDATE_DEVICE
+* MOVE_DEVICE
+* DELETE_DEVICE
+* CREATE_POSITION
+* UPDATE_POSITION
+* UPLOAD_FLOOR_PLAN
+* ACTIVATE_FLOOR_PLAN
+* UPDATE_FLOOR_ROTATION
+* EXPORT_REPORT
+* UPDATE_PERMISSION
+
+สร้าง Audit Log Viewer
+
+รองรับ:
+
+* Search
+* Filter
+* Date Range
+* User Filter
+* Action Filter
+* Entity Filter
+* Export
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 29: Screenshot และ Export มุมมอง 3D
+
+สร้างฟังก์ชัน Capture 3D View
+
+ผู้ใช้สามารถ:
+
+* ตั้งมุมกล้อง
+* เลือกอาคาร
+* เลือกชั้น
+* เปิดหรือปิด Marker
+* เปิดหรือปิด Label
+* กด Capture
+* Export PNG
+
+ตัวเลือกในภาพ:
+
+* ชื่ออาคาร
+* ชื่อชั้น
+* วันที่
+* เวลา
+* จำนวนอุปกรณ์
+* Legend
+* ชื่อผู้จัดทำ
+* Watermark
+
+รองรับการนำภาพ 3D ไปใส่ใน PDF Report
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 30: Performance Optimization
+
+ระบบต้องรองรับ:
+
+* อย่างน้อย 10 ชั้นต่ออาคาร
+* อย่างน้อย 500 Marker ต่อชั้น
+* อย่างน้อย 2,000 Marker ใน Building View
+* อุปกรณ์รวมอย่างน้อย 10,000 รายการ
+
+แนวทาง:
+
+* InstancedMesh
+* Frustum Culling
+* Lazy Loading
+* Texture Compression
+* Texture Resize
+* Dispose Geometry
+* Dispose Material
+* Dispose Texture
+* ลด Label เมื่อ Zoom Out
+* ลด Pixel Ratio
+* หลีกเลี่ยง Re-render
+* Pagination
+* Query Caching
+* Database Index
+* API Filtering
+* Image Optimization
+
+เป้าหมาย:
+
+* Desktop ประมาณ 45–60 FPS
+* Tablet ประมาณ 30 FPS
+* เปิด Floor ทั่วไปภายในประมาณ 2 วินาทีใน LAN
+
+เพิ่ม Performance Monitoring ใน Development Mode
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 31: Security Hardening
+
+ตรวจสอบและพัฒนา:
+
+* Password Hash
+* Secure Cookie
+* Session Security
+* CSRF Protection
+* XSS Protection
+* Secure Headers
+* Rate Limit
+* File Upload Validation
+* MIME Verification
+* Storage Path Security
+* API Authorization
+* Input Validation
+* Output Sanitization
+* Audit Log
+* Least Privilege
+* Secret Management
+* HTTPS Configuration
+* Backup Policy
+* Restore Procedure
+
+คำนึงถึง PDPA:
+
+* เก็บข้อมูลเท่าที่จำเป็น
+* จำกัดสิทธิ์การเข้าถึง
+* บันทึกประวัติการเข้าถึง
+* กำหนดระยะเวลาการเก็บ Log
+* รองรับการตรวจสอบการ Export
+* ไม่เปิดเผยข้อมูลเครือข่ายแก่ผู้ไม่มีสิทธิ์
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 32: Automated Testing
+
+สร้าง Unit Test:
+
+* Normalized Coordinates
+* World Coordinates
+* Canvas Coordinates
+* Asset Code Validation
+* IP Validation
+* MAC Validation
+* Permission Check
+* Duplicate Detection
+* Floor Rotation
+* Device Position Conversion
+
+สร้าง Integration Test:
+
+* Upload Floor Plan
+* Activate Floor Plan
+* Create Device
+* Create Device Position
+* Move Device
+* Search Device
+* Export Report
+* Audit Log
+* Permission Check
+
+สร้าง Playwright E2E Test:
+
+1. Login
+2. สร้างอาคาร
+3. สร้างชั้น
+4. Upload Floor Plan
+5. เปิด 2D Editor
+6. เพิ่ม Device
+7. คลิกตำแหน่ง
+8. บันทึก
+9. Refresh
+10. ตรวจสอบ Marker
+11. ลาก Marker
+12. ตรวจสอบ Movement History
+13. เปิด 3D Floor View
+14. ตรวจสอบ Marker ตรงตำแหน่ง
+15. หมุนกล้อง
+16. หมุน Floor
+17. เปิด 3D Building View
+18. ใช้ Exploded View
+19. Isolate Floor
+20. ค้นหา Device
+21. Focus Device
+22. ตรวจสอบ Permission
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 33: Docker และ Deployment
+
+สร้าง:
+
+* Dockerfile
+* docker-compose.yml
+* PostgreSQL Service
+* MinIO Service
+* Application Service
+* Nginx Service
+* Health Check
+* Volume
+* Network
+* Environment Variables
+* Production Build
+
+สร้างเอกสาร:
+
+* Development Installation
+* Production Installation
+* Database Migration
+* Backup
+* Restore
+* Upgrade
+* Rollback
+* Troubleshooting
+
+ตรวจสอบ:
+
+```bash
+docker compose build
+docker compose up
+```
+
+ระบบต้องเปิดใช้งานได้จาก Browser ในเครือข่ายภายใน
+
+หยุดและรายงานผลก่อน Step ถัดไป
+
+---
+
+# Step 34: Documentation
+
+สร้างเอกสารภาษาไทย:
+
+1. README
+2. Architecture Document
+3. ER Diagram
+4. API Documentation
+5. Installation Guide
+6. Deployment Guide
+7. Backup and Restore Guide
+8. Administrator Manual
+9. IT Asset Officer Manual
+10. Viewer Manual
+11. Floor Plan Upload Guide
+12. 2D Editor Guide
+13. 3D Viewer Guide
+14. Troubleshooting Guide
+15. Security Guide
+16. Release Note
+
+เอกสารต้องมีภาพหน้าจอหรือ Diagram ในส่วนสำคัญ
+
+---
+
+# Step 35: Final Acceptance Test
+
+ตรวจสอบ Acceptance Criteria ต่อไปนี้
+
+## อาคารและชั้น
+
+* เพิ่มอาคารได้
+* เพิ่มชั้นได้
+* แก้ไขขนาดชั้นได้
+* กำหนด Floor Elevation ได้
+* กำหนด Floor Rotation ได้
+
+## Floor Plan
+
+* Upload ได้
+* Preview ได้
+* Versioning ได้
+* Activate ได้
+* ภาพไม่ผิดสัดส่วน
+
+## 2D Editor
+
+* Zoom ได้
+* Pan ได้
+* เพิ่ม Marker ได้
+* ย้าย Marker ได้
+* ลบ Marker ได้
+* Undo และ Redo ได้
+* Resize แล้ว Marker ไม่คลาดเคลื่อน
+
+## 3D Floor View
+
+* โหลด Floor Texture ได้
+* หมุนกล้องได้
+* Zoom ได้
+* Pan ได้
+* หมุน Floor ได้
+* Reset Camera ได้
+* Top View ได้
+* Perspective View ได้
+* Marker ตรงกับ 2D
+* Marker หมุนตาม Floor
+* คลิก Marker ได้
+* Search และ Focus ได้
+
+## 3D Building View
+
+* แสดงหลายชั้นได้
+* แต่ละชั้นใช้ Floor Plan ของตนเอง
+* เลือกชั้นได้
+* ซ่อนชั้นได้
+* Exploded View ได้
+* Isolation Mode ได้
+* Marker อยู่กับชั้นที่ถูกต้อง
+
+## Security
+
+* RBAC ทำงาน
+* Viewer แก้ไขไม่ได้
+* Network Data ถูกซ่อนตามสิทธิ์
+* Audit Log ทำงาน
+* Upload ปลอดภัย
+
+## Performance
+
+* รองรับ 500 Marker ต่อชั้น
+* รองรับ 2,000 Marker ใน Building View
+* ไม่มี Memory Leak เมื่อเปลี่ยนชั้นหลายครั้ง
+* Texture ถูก Dispose
+* UI ยังตอบสนองได้
+
+## Testing
+
+* Unit Test ผ่าน
+* Integration Test ผ่าน
+* E2E Test ผ่าน
+* Build ผ่าน
+* Lint ผ่าน
+
+---
+
+# รูปแบบรายงานหลังจบแต่ละ Step
+
+หลังจากดำเนินการแต่ละ Step ให้ตอบในรูปแบบนี้
+
+```text
+Step ที่ดำเนินการ:
+สถานะ: สำเร็จ / สำเร็จบางส่วน / ไม่สำเร็จ
+
+สิ่งที่ทำเสร็จ:
+- ...
+
+ไฟล์ที่สร้าง:
+- ...
+
+ไฟล์ที่แก้ไข:
+- ...
+
+Database Migration:
+- ...
+
+API ที่เพิ่ม:
+- ...
+
+Test ที่เพิ่ม:
+- ...
+
+ผลการตรวจสอบ:
+- npm run lint:
+- npm run build:
+- unit test:
+- integration test:
+- e2e test:
+
+ปัญหาที่พบ:
+- ...
+
+สิ่งที่ยังไม่ได้ทำ:
+- ...
+
+ข้อเสนอแนะก่อน Step ถัดไป:
+- ...
+```
+
+---
+
+# คำสั่งเริ่มต้นสำหรับ AI
+
+ให้เริ่มเฉพาะ Step 0 เท่านั้น
+
+อย่าเขียนโค้ดของ Step 1 หรือ Step อื่นในตอนนี้
+
+ให้ส่งมอบ:
+
+1. สรุปความเข้าใจของระบบ
+2. Architecture
+3. Module Diagram
+4. Data Flow
+5. Database Overview
+6. แนวทาง 2D และ 3D
+7. Development Roadmap
+8. ความเสี่ยงทางเทคนิค
+9. Acceptance Criteria เบื้องต้น
+10. คำถามหรือสมมติฐานที่จำเป็น
+
+เมื่อ Step 0 เสร็จแล้วให้หยุด และรอคำสั่งว่า:
+
+“ดำเนินการ Step 1”

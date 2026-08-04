@@ -1,0 +1,516 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 1. User & Authentication Models (RBAC)
+// ==========================================
+
+model User {
+  id           String      @id @default(uuid()) @db.Uuid
+  email        String      @unique
+  passwordHash String
+  name         String
+  isActive     Boolean     @default(true)
+  createdBy    String?
+  updatedBy    String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  roles          UserRole[]
+  auditLogs      AuditLog[]
+  assetMovements AssetMovement[]
+  viewPresets    ViewPreset[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique // ADMIN, OFFICER, VIEWER
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  resource    String
+  action      String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  roleId     String   @db.Uuid
+  assignedAt DateTime @default(now())
+  assignedBy String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String @id @default(uuid()) @db.Uuid
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ==========================================
+// 2. Location & Floor Plan Models
+// ==========================================
+
+model Building {
+  id                  String    @id @default(uuid()) @db.Uuid
+  code                String    @unique
+  name                String
+  shortName           String?
+  description         String?
+  imageUrl            String?
+  locationDescription String?
+  isActive            Boolean   @default(true)
+  createdBy           String?
+  updatedBy           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  floors         Floor[]
+  floorPlans     FloorPlan[]
+  rooms          Room[]
+  devices        Device[]        @relation("BuildingDevices")
+  lanOutlets     LanOutlet[]
+  fromMovements  AssetMovement[] @relation("FromBuilding")
+  toMovements    AssetMovement[] @relation("ToBuilding")
+
+  @@map("buildings")
+}
+
+model Floor {
+  id             String    @id @default(uuid()) @db.Uuid
+  buildingId     String    @db.Uuid
+  floorNumber    Int
+  name           String
+  description    String?
+  displayOrder   Int       @default(0)
+  floorWidth     Float     @default(50.0) // 3D dimensions (meters)
+  floorDepth     Float     @default(30.0)
+  floorHeight    Float     @default(3.5)
+  floorThickness Float     @default(0.3)
+  floorElevation Float     @default(0.0)
+  rotationX      Float     @default(0.0)
+  rotationY      Float     @default(0.0)
+  rotationZ      Float     @default(0.0)
+  isActive       Boolean   @default(true)
+  createdBy      String?
+  updatedBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  building      Building        @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  floorPlans    FloorPlan[]
+  rooms         Room[]
+  devices       Device[]        @relation("FloorDevices")
+  lanOutlets    LanOutlet[]
+  fromMovements AssetMovement[] @relation("FromFloor")
+  toMovements   AssetMovement[] @relation("ToFloor")
+
+  @@map("floors")
+}
+
+model FloorPlan {
+  id             String    @id @default(uuid()) @db.Uuid
+  buildingId     String    @db.Uuid
+  floorId        String    @db.Uuid
+  name           String
+  version        Int       @default(1)
+  fileUrl        String
+  mimeType       String
+  originalWidth  Int
+  originalHeight Int
+  textureOffsetX Float     @default(0.0)
+  textureOffsetY Float     @default(0.0)
+  textureScaleX  Float     @default(1.0)
+  textureScaleY  Float     @default(1.0)
+  textureRotation Float    @default(0.0)
+  textureOpacity Float     @default(1.0)
+  isActive       Boolean   @default(false)
+  uploadedBy     String?
+  uploadedAt     DateTime  @default(now())
+  deletedAt      DateTime?
+
+  building        Building         @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  floor           Floor            @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  devicePositions DevicePosition[]
+
+  @@map("floor_plans")
+}
+
+model Room {
+  id          String    @id @default(uuid()) @db.Uuid
+  buildingId  String    @db.Uuid
+  floorId     String    @db.Uuid
+  code        String
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdBy   String?
+  updatedBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  building      Building        @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  floor         Floor           @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  devices       Device[]
+  lanOutlets    LanOutlet[]
+  fromMovements AssetMovement[] @relation("FromRoom")
+  toMovements   AssetMovement[] @relation("ToRoom")
+
+  @@map("rooms")
+}
+
+model Department {
+  id          String    @id @default(uuid()) @db.Uuid
+  code        String    @unique
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  createdBy   String?
+  updatedBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  devices       Device[] @relation("DeviceDepartment")
+  ownedDevices  Device[] @relation("OwnerDepartment")
+
+  @@map("departments")
+}
+
+// ==========================================
+// 3. IT Asset & Position Models
+// ==========================================
+
+model DeviceType {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  category    String   // COMPUTER, NETWORK, PERIPHERAL, OTHER
+  icon        String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  devices Device[]
+
+  @@map("device_types")
+}
+
+model Device {
+  id                  String    @id @default(uuid()) @db.Uuid
+  assetCode           String    @unique
+  govAssetCode        String?
+  deviceName          String
+  deviceTypeId        String    @db.Uuid
+  deviceSubtype       String?
+  brand               String?
+  model               String?
+  serialNumber        String?
+  description         String?
+  imageUrl            String?
+  buildingId          String?   @db.Uuid
+  floorId             String?   @db.Uuid
+  roomId              String?   @db.Uuid
+  departmentId        String?   @db.Uuid
+  status              String    @default("ACTIVE") // ACTIVE, IN_USE, IN_REPAIR, RETIRED, DISPOSED
+  responsiblePerson   String?
+  ownerDepartmentId   String?   @db.Uuid
+  purchaseDate        DateTime?
+  purchasePrice       Float?
+  vendor              String?
+  contractNumber      String?
+  warrantyStartDate   DateTime?
+  warrantyEndDate     DateTime?
+  expectedLifetime    Int?
+  installDate         DateTime?
+  lastInspectionDate  DateTime?
+  nextInspectionDate  DateTime?
+  note                String?
+  createdBy           String?
+  updatedBy           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  deviceType         DeviceType          @relation(fields: [deviceTypeId], references: [id])
+  building           Building?           @relation("BuildingDevices", fields: [buildingId], references: [id])
+  floor              Floor?              @relation("FloorDevices", fields: [floorId], references: [id])
+  room               Room?               @relation(fields: [roomId], references: [id])
+  department         Department?         @relation("DeviceDepartment", fields: [departmentId], references: [id])
+  ownerDepartment    Department?         @relation("OwnerDepartment", fields: [ownerDepartmentId], references: [id])
+  positions          DevicePosition[]
+  networkInterfaces  NetworkInterface[]
+  networkSwitch      NetworkSwitch?
+  connectedPorts     SwitchPort[]        @relation("ConnectedDevice")
+  maintenanceRecords MaintenanceRecord[]
+  attachments        Attachment[]
+  movements          AssetMovement[]
+
+  @@map("devices")
+}
+
+model DevicePosition {
+  id                 String    @id @default(uuid()) @db.Uuid
+  deviceId           String    @db.Uuid
+  floorPlanId        String    @db.Uuid
+  positionX          Float     // Normalized (0.0 - 1.0)
+  positionY          Float     // Normalized (0.0 - 1.0)
+  positionZ          Float     @default(0.0)
+  rotationX          Float     @default(0.0)
+  rotationY          Float     @default(0.0)
+  rotationZ          Float     @default(0.0)
+  markerScale        Float     @default(1.0)
+  placementType      String    @default("FLOOR") // FLOOR, WALL, CEILING, RACK
+  elevationFromFloor Float     @default(0.0)
+  wallSide           String?
+  wallOffset         Float?
+  effectiveFrom      DateTime  @default(now())
+  effectiveTo        DateTime?
+  isCurrent          Boolean   @default(true)
+  createdBy          String?
+  createdAt          DateTime  @default(now())
+
+  device    Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  floorPlan FloorPlan @relation(fields: [floorPlanId], references: [id], onDelete: Cascade)
+
+  @@map("device_positions")
+}
+
+// ==========================================
+// 4. Network Topology Models
+// ==========================================
+
+model NetworkInterface {
+  id           String   @id @default(uuid()) @db.Uuid
+  deviceId     String   @db.Uuid
+  name         String   // eth0, wlan0, LAN1
+  macAddress   String?
+  ipAddress    String?
+  subnetMask   String?
+  gateway      String?
+  vlan         Int?
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  device         Device       @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  connectedPorts SwitchPort[] @relation("ConnectedInterface")
+
+  @@map("network_interfaces")
+}
+
+model NetworkSwitch {
+  id          String   @id @default(uuid()) @db.Uuid
+  deviceId    String   @unique @db.Uuid
+  totalPorts  Int      @default(24)
+  rackName    String?
+  rackUnit    Int?
+  ipAddress   String?
+  macAddress  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  device Device       @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  ports  SwitchPort[]
+
+  @@map("network_switches")
+}
+
+model SwitchPort {
+  id                   String   @id @default(uuid()) @db.Uuid
+  switchId             String   @db.Uuid
+  portNumber           Int
+  portName             String
+  portType             String   @default("RJ45") // RJ45, SFP, SFP+
+  speed                String   @default("1Gbps")
+  status               String   @default("DOWN") // UP, DOWN, DISABLED
+  vlanId               Int?
+  connectedDeviceId    String?  @db.Uuid
+  connectedInterfaceId String?  @db.Uuid
+  connectedOutletId    String?  @db.Uuid
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  switch             NetworkSwitch     @relation(fields: [switchId], references: [id], onDelete: Cascade)
+  connectedDevice    Device?           @relation("ConnectedDevice", fields: [connectedDeviceId], references: [id])
+  connectedInterface NetworkInterface? @relation("ConnectedInterface", fields: [connectedInterfaceId], references: [id])
+  connectedOutlet    LanOutlet?        @relation(fields: [connectedOutletId], references: [id])
+
+  @@map("switch_ports")
+}
+
+model LanOutlet {
+  id          String    @id @default(uuid()) @db.Uuid
+  buildingId  String    @db.Uuid
+  floorId     String    @db.Uuid
+  roomId      String?   @db.Uuid
+  outletCode  String    @unique
+  outletType  String    @default("CAT6")
+  positionX   Float?
+  positionY   Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  building    Building     @relation(fields: [buildingId], references: [id])
+  floor       Floor        @relation(fields: [floorId], references: [id])
+  room        Room?        @relation(fields: [roomId], references: [id])
+  switchPorts SwitchPort[]
+
+  @@map("lan_outlets")
+}
+
+// ==========================================
+// 5. Movements, Maintenance, Audit & Presets
+// ==========================================
+
+model AssetMovement {
+  id             String   @id @default(uuid()) @db.Uuid
+  deviceId       String   @db.Uuid
+  fromBuildingId String?  @db.Uuid
+  fromFloorId    String?  @db.Uuid
+  fromRoomId     String?  @db.Uuid
+  toBuildingId   String?  @db.Uuid
+  toFloorId      String?  @db.Uuid
+  toRoomId       String?  @db.Uuid
+  movementType   String   // RELOCATION, REPAIR, RETIREMENT, DISPOSAL
+  reason         String?
+  movedBy        String?  @db.Uuid
+  movedAt        DateTime @default(now())
+
+  device       Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  fromBuilding Building? @relation("FromBuilding", fields: [fromBuildingId], references: [id])
+  fromFloor    Floor?    @relation("FromFloor", fields: [fromFloorId], references: [id])
+  fromRoom     Room?     @relation("FromRoom", fields: [fromRoomId], references: [id])
+  toBuilding   Building? @relation("ToBuilding", fields: [toBuildingId], references: [id])
+  toFloor      Floor?    @relation("ToFloor", fields: [toFloorId], references: [id])
+  toRoom       Room?     @relation("ToRoom", fields: [toRoomId], references: [id])
+  user         User?     @relation(fields: [movedBy], references: [id])
+
+  @@map("asset_movements")
+}
+
+model MaintenanceRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  deviceId        String    @db.Uuid
+  title           String
+  description     String?
+  maintenanceType String    // PREVENTIVE, CORRECTIVE, WARRANTY
+  vendor          String?
+  cost            Float?
+  status          String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  startDate       DateTime?
+  endDate         DateTime?
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_records")
+}
+
+model Attachment {
+  id         String   @id @default(uuid()) @db.Uuid
+  deviceId   String   @db.Uuid
+  fileName   String
+  fileUrl    String
+  mimeType   String
+  fileSize   Int
+  uploadedBy String?
+  uploadedAt DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @db.Uuid
+  action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  resource   String   // DEVICE, FLOOR_PLAN, USER, BUILDING
+  resourceId String?
+  details    String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  value       String
+  description String?
+  isPublic    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model ViewPreset {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  name            String
+  buildingId      String?  @db.Uuid
+  floorId         String?  @db.Uuid
+  cameraPositionX Float    @default(0.0)
+  cameraPositionY Float    @default(50.0)
+  cameraPositionZ Float    @default(50.0)
+  targetX         Float    @default(0.0)
+  targetY         Float    @default(0.0)
+  targetZ         Float    @default(0.0)
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("view_presets")
+}
