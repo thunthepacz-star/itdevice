@@ -125,8 +125,21 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error('Login error:', err);
+    
+    const isDbError =
+      err.message?.includes('database') ||
+      err.message?.includes('relation') ||
+      err.message?.includes('connect') ||
+      err.message?.includes('Prisma') ||
+      err.code === 'P1001' ||
+      err.code === 'P2021';
+
+    const errorMsg = isDbError
+      ? `ไม่สามารถเชื่อมต่อฐานข้อมูลได้ หรือยังไม่ได้สร้างตาราง (กรุณาตรวจสอบ DATABASE_URL และรัน npx prisma db push): ${err.message || ''}`
+      : 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
+
     return NextResponse.json(
-      { error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง' },
+      { error: errorMsg },
       { status: 500 }
     );
   }
