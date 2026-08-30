@@ -43,3 +43,6 @@ next-env.d.ts
 .vercel
 .env*
 openclaude/
+
+# Local Netlify folder
+.netlify
