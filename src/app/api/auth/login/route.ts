@@ -61,16 +61,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Check user & password (for demo, accept fallback password hash if DB seed hasn't been executed yet)
-    let passwordMatch = false;
-    if (user) {
-      // Demo fallback password for instant testing: "admin123", "officer123", "viewer123" or bcrypt check
-      if (password === 'admin123' || password === 'officer123' || password === 'viewer123') {
-        passwordMatch = true;
-      } else {
-        passwordMatch = await verifyPassword(password, user.passwordHash);
-      }
-    }
+    const passwordMatch = user
+      ? await verifyPassword(password, user.passwordHash)
+      : false;
 
     if (!user || !user.isActive || !passwordMatch) {
       await db.auditLog.create({
@@ -123,24 +116,26 @@ export async function POST(req: NextRequest) {
         roles: userRoles,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Login error:', err);
+    const message = err instanceof Error ? err.message : '';
+    const code = err && typeof err === 'object' && 'code' in err ? err.code : undefined;
     
     const isDbError =
-      err.message?.includes('database') ||
-      err.message?.includes('relation') ||
-      err.message?.includes('connect') ||
-      err.message?.includes('Prisma') ||
-      err.code === 'P1001' ||
-      err.code === 'P2021';
+      message.includes('database') ||
+      message.includes('relation') ||
+      message.includes('connect') ||
+      message.includes('Prisma') ||
+      code === 'P1001' ||
+      code === 'P2021';
 
     const errorMsg = isDbError
-      ? `ไม่สามารถเชื่อมต่อฐานข้อมูลได้ หรือยังไม่ได้สร้างตาราง (กรุณาตรวจสอบ DATABASE_URL และรัน npx prisma db push): ${err.message || ''}`
+      ? 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาติดต่อผู้ดูแลระบบ'
       : 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง';
 
     return NextResponse.json(
       { error: errorMsg },
-      { status: 500 }
+      { status: isDbError ? 503 : 500 }
     );
   }
 }

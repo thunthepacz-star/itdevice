@@ -210,16 +210,18 @@ function SelectItem({
   children,
   ...props
 }: SelectPrimitive.Item.Props) {
-  const ctx = React.useContext(SelectContext);
+  const { registerItem, unregisterItem } = React.useContext(SelectContext) ?? {};
 
   React.useEffect(() => {
-    if (value !== undefined && ctx) {
-      ctx.registerItem(value, children);
+    if (value !== undefined && registerItem && unregisterItem) {
+      registerItem(value, children);
       return () => {
-        ctx.unregisterItem(value);
+        unregisterItem(value);
       };
     }
-  }, [value, children, ctx]);
+    // The context changes when labels register. Depending on it would repeatedly
+    // unregister and register every item, blocking client-side navigation.
+  }, [value, children, registerItem, unregisterItem]);
 
   return (
     <SelectPrimitive.Item

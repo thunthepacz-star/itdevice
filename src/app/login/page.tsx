@@ -35,8 +35,8 @@ export default function LoginPage() {
 
       router.push('/dashboard');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'การเข้าสู่ระบบไม่สำเร็จ');
     } finally {
       setIsLoading(false);
     }
@@ -127,6 +127,7 @@ export default function LoginPage() {
             </form>
 
             {/* Quick Demo Selector */}
+            {process.env.NODE_ENV === 'development' && (
             <div className="pt-4 border-t border-slate-800 space-y-2">
               <div className="text-[11px] font-semibold text-slate-400 text-center uppercase tracking-wider">
                 ทดสอบเข้าใช้งาน (Quick Demo Account Login)
@@ -169,6 +170,7 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+            )}
           </CardContent>
         </Card>
       </div>

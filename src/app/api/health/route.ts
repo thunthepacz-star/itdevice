@@ -13,13 +13,14 @@ export async function GET() {
       database: 'connected',
       version: '1.0.0',
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    console.error('Database health check failed:', err);
     return NextResponse.json(
       {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         database: 'disconnected',
-        error: err.message,
+        error: 'Database connection unavailable',
       },
       { status: 503 }
     );

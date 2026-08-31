@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { getConnectionString } from '@netlify/database';
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres:postgrespassword@localhost:5432/itdeviceregister?schema=public';
+const connectionString = process.env.NETLIFY_DB_URL
+  ? getConnectionString()
+  : process.env.DATABASE_URL ||
+    'postgresql://postgres:postgrespassword@localhost:5432/itdeviceregister?schema=public';
 
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);

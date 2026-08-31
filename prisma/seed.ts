@@ -1,6 +1,10 @@
 import { db as prisma } from '../src/lib/db';
+import { hash } from 'bcryptjs';
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Demo seeding is disabled in production. Create an administrator with a unique password instead.');
+  }
   console.log('🌱 Seeding IT Device Register database...');
 
   // 1. Roles
@@ -41,7 +45,7 @@ async function main() {
     create: {
       email: 'admin@hospital.go.th',
       name: 'ผู้ดูแลระบบ (Admin)',
-      passwordHash: '$2a$10$abcdefghijklmnopqrstuvw', // Demo hash
+      passwordHash: await hash('admin123', 12),
       roles: {
         create: { roleId: adminRole.id },
       },
@@ -54,7 +58,7 @@ async function main() {
     create: {
       email: 'officer@hospital.go.th',
       name: 'เจ้าหน้าที่พัสดุไอที (Asset Officer)',
-      passwordHash: '$2a$10$abcdefghijklmnopqrstuvw',
+      passwordHash: await hash('officer123', 12),
       roles: {
         create: { roleId: officerRole.id },
       },
@@ -67,7 +71,7 @@ async function main() {
     create: {
       email: 'viewer@hospital.go.th',
       name: 'ผู้ใช้งานทั่วไป (Viewer)',
-      passwordHash: '$2a$10$abcdefghijklmnopqrstuvw',
+      passwordHash: await hash('viewer123', 12),
       roles: {
         create: { roleId: viewerRole.id },
       },
